@@ -2,8 +2,6 @@ package entity
 
 import rl "vendor:raylib"
 
-EntityID :: distinct i32
-
 Entity :: struct {
     using transform: Transform,
     texture: Texture,
@@ -31,7 +29,7 @@ Circle :: struct {
 
 Rigidbody :: struct {
     mass: f32,
-    velocity, force: rl.Vector2,
+    velocity: rl.Vector2,
     flags: bit_set[RigidbodyFlag],
 }
 

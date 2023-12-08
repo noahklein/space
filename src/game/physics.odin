@@ -9,7 +9,7 @@ Physics :: struct {
 }
 
 FIXED_DT :: 1.0 / 120.0
-GRAVITY  :: 0.000000001
+GRAVITY  :: 10
 
 physics_init :: proc(p: ^Physics) {
 }
@@ -26,10 +26,13 @@ physics_update :: proc(w: ^World, dt: f32) {
 }
 
 physics_subupdate :: proc(w: ^World, dt: f32) {
-    for &ent in w.entities {
+    iter_a: entity.IterState
+    for ent, id_a in entity.iter(w.entities, &iter_a) {
         rb := &ent.rigidbody
 
-        for ent_b in w.entities {
+        // Apply gravity from each body. F = GMm / r²
+        iter_b : entity.IterState
+        for ent_b, id_b in entity.iter(w.entities, &iter_b) do if id_a != id_b {
             rb_b := ent_b.rigidbody
             ab := ent_b.pos - ent.pos
             dist_squared := ab.x * ab.x + ab.y * ab.y
@@ -40,7 +43,8 @@ physics_subupdate :: proc(w: ^World, dt: f32) {
         }
     }
 
-    for &ent in w.entities {
+    iter_a = 0 // Reuse iterator
+    for ent in entity.iter(w.entities, &iter_a) {
         ent.pos += ent.rigidbody.velocity * dt
     }
 }

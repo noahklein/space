@@ -40,11 +40,9 @@ main :: proc() {
     game.physics_init(&world.physics)
     defer game.physics_deinit(&world.physics)
 
-    timescale := f32(0)
-
     rl.SetTargetFPS(60)
     for !rl.WindowShouldClose() {
-        dt := rl.GetFrameTime() * timescale
+        dt := rl.GetFrameTime() * world.timescale
         world.stats.frames += 1
 
         input := game.get_input(world)
