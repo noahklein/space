@@ -14,6 +14,7 @@ World :: struct {
 
     entities: entity.Storage,
     physics: Physics,
+
     stats: EngineStats,
 }
 
@@ -28,8 +29,9 @@ EngineStats :: struct {
 Input :: enum u8 {
     Up, Down,
     Left, Right,
-    Slower, Faster,
     Select,
+
+    Slower, Faster, PredictFuture,
 }
 
 get_input :: proc(w: World) -> (input: bit_set[Input]) {
@@ -39,10 +41,12 @@ get_input :: proc(w: World) -> (input: bit_set[Input]) {
     else if rl.IsKeyDown(.RIGHT) || rl.IsKeyDown(.D) do input += {.Right}
 
     // if rl.IsKeyPressed(.SPACE) do input += {.Pause} if w.timescale != 0 else {.Play}
-         if rl.IsKeyPressed(.RIGHT_BRACKET) do input += {.Faster}
-    else if rl.IsKeyPressed(.LEFT_BRACKET)  do input += {.Slower}
+         if rl.IsKeyPressed(.PERIOD) do input += {.Faster}
+    else if rl.IsKeyPressed(.COMMA)  do input += {.Slower}
 
     if rl.IsMouseButtonPressed(.LEFT) do input += {.Select}
+
+    if rl.IsKeyPressed(.F) do input += {.PredictFuture}
 
     return input
 }
@@ -53,13 +57,18 @@ init :: proc() -> (w: World) {
 
     w.entities = entity.storage_init(128)
     entity.create(&w.entities, entity.Entity{
-        scale = 10, texture = entity.Circle{rl.WHITE},
-        rigidbody = {mass = 100, velocity = {-10, 2}}
+        pos = {0, 1000},
+        scale = 500, texture = entity.Circle{rl.YELLOW},
+        rigidbody = {mass = 50000, velocity = {0, 0}},
     })
     entity.create(&w.entities, entity.Entity{
-        pos = {-600, -300},
-        scale = 100, texture = entity.Circle{rl.RED},
-        rigidbody = {mass = 10000, velocity = {10, 0}}
+        scale = 200, texture = entity.Circle{rl.BLUE},
+        rigidbody = {mass = 20000, velocity = {20, 0}}
+    })
+    entity.create(&w.entities, entity.Entity{
+        pos = {0, -400},
+        scale = 10, texture = entity.Circle{rl.RED},
+        rigidbody = {mass = 1000, velocity = {40, 0}}
     })
 
     return w
@@ -140,29 +149,42 @@ draw :: proc(w: World) {
                 draw_text(i32(start.x), i32(start.y +  0), 10, "P=%.1f", ent.pos)
                 draw_text(i32(start.x), i32(start.y + 10), 10, "V=%.1f", ent.rigidbody.velocity)
                 draw_text(i32(start.x), i32(start.y + 20), 10, "M=%.0f", ent.rigidbody.mass)
-                // rl.DrawText(pos_str, i32(start.x), i32(start.y), 10, rl.WHITE)
-                // rl.DrawText(vel_str, i32(start.x), i32(start.y + 10), 10, rl.WHITE)
             }
         case rl.Texture2D:
             panic("Textures not yet supported")
         }
     }
-}
 
-draw_gui :: proc(w: ^World) {
-    FONT :: 10
-    {
-    // Top-left panel
-    X :: 10
-    Y :: 10
-    TITLE :: 18
-    rl.GuiPanel({0, 0, 200, 10 * Y}, fmt.ctprintf("%d FPS", rl.GetFPS()))
-    draw_text(X, 1 * Y + TITLE, FONT, "Timestep: %v", w.timescale)
+    iter_state = 0
+    for ent in entity.iter(future.world.entities, &iter_state) {
+        switch tex in ent.texture {
+        case entity.Circle:
+            rl.DrawCircleV(ent.pos, ent.scale, tex.color - {0, 0, 0, 150})
+        case rl.Texture2D:
+            panic("Textures not yet supported - future prediction")
+        }
     }
 
+    for ent_id, points in future.points {
+        circ_iter : CircularIter
+        prev : rl.Vector2
+        init : bool
+        for p in circular_iter(points, &circ_iter){
+        // for p, i in points {
+            if !init {
+                init = true
+                prev = p
+                continue
+            }
+
+            ent := entity.get(future.world.entities, ent_id) or_continue
+            rl.DrawLineV(prev, p, ent.texture.(entity.Circle).color)
+
+            prev = p
+        }
+    }
 }
 
-draw_text :: proc(x, y, font_size: i32, format: string, args: ..any) {
-    str := fmt.ctprintf(format, ..args)
-    rl.DrawText(str, x, y, font_size, rl.DARKBLUE)
+mouse_to_world :: proc(cam: rl.Camera2D) -> rl.Vector2 {
+    return rl.GetScreenToWorld2D(rl.GetMousePosition(), cam)
 }

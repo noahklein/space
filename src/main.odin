@@ -37,7 +37,7 @@ main :: proc() {
     rl.InitWindow(i32(world.screen.x), i32(world.screen.y), "Space")
     defer rl.CloseWindow()
 
-    game.physics_init(&world.physics)
+    game.physics_init(&world)
     defer game.physics_deinit(&world.physics)
 
     rl.SetTargetFPS(60)
@@ -51,6 +51,7 @@ main :: proc() {
         game.draw(world)
 
         when ODIN_DEBUG {
+            game.update_gui(&world)
             game.draw_gui(&world)
         }
     }

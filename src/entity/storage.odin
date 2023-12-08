@@ -15,6 +15,8 @@ storage_deinit :: proc(s: Storage) {
     delete(s.entities)
 }
 
+size :: #force_inline proc(s: Storage) -> int { return len(s.entities) }
+
 create :: proc(s: ^Storage, e: Entity) -> ID {
     append(&s.entities, e)
     return ID(len(s.entities) - 1)
