@@ -11,7 +11,7 @@ Physics :: struct {
     dt_acc: f32,
 }
 
-FUTURE_TIMESTEPS  :: 2000
+FUTURE_TIMESTEPS  :: 1500
 FUTURE_STEPSIZE   :: 1.0 // In seconds
 
 // Copy the world and predict the future.
