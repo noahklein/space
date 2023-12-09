@@ -11,8 +11,8 @@ Physics :: struct {
     dt_acc: f32,
 }
 
-FUTURE_TIMESTEPS  :: 5000
-FUTURE_STEPSIZE   :: 1.0 / 60.0 // In seconds
+FUTURE_TIMESTEPS  :: 2000
+FUTURE_STEPSIZE   :: 1.0 // In seconds
 
 // Copy the world and predict the future.
 Future :: struct {
@@ -33,10 +33,22 @@ physics_init :: proc(ents: entity.Storage) {
         future.paths[id] = {}
     }
 
-    for timestep in 0..<FUTURE_TIMESTEPS {
-        physics_subupdate(&future.world, FUTURE_STEPSIZE)
-        future_update(ents)
+    acc := FUTURE_STEPSIZE * FUTURE_TIMESTEPS
+    future_acc : f32
+    timestep : int
+    for acc >= FIXED_DT {
+        acc -= FIXED_DT
+        physics_subupdate(&future.world, FIXED_DT)
 
+        future_acc += FIXED_DT
+        if future_acc < FUTURE_STEPSIZE {
+            continue
+        }
+
+        // Add a point to the future path.
+        timestep += 1
+        future_acc -= FUTURE_STEPSIZE
+        future_update(ents)
         for ent, id in future.world.entities.data {
             id := entity.ID(id)
             circular, ok := &future.paths[id]
@@ -58,14 +70,13 @@ physics_update :: proc(w: ^World, dt: f32) {
     for w.physics.dt_acc >= FIXED_DT {
         w.physics.dt_acc -= FIXED_DT
         physics_subupdate(w, FIXED_DT)
-    }
+        physics_subupdate(&future.world, FIXED_DT)
 
-    // Future update
-    future.dt_acc += dt
-    for future.dt_acc >= FUTURE_STEPSIZE {
-        future.dt_acc -= FUTURE_STEPSIZE
-        physics_subupdate(&future.world, FUTURE_STEPSIZE)
-        future_update(w.entities)
+        future.dt_acc += FIXED_DT
+        if future.dt_acc >= FUTURE_STEPSIZE {
+            future.dt_acc -= FUTURE_STEPSIZE
+            future_update(w.entities)
+        }
     }
 }
 
@@ -98,16 +109,6 @@ future_update :: proc(entities: entity.Storage) {
             panic("entity missing from future.paths")
         }
         circular_add(circular, ent.pos)
-        circular.points[circular.start] = ent.pos
-    }
-
-    for ent, id in entities.data {
-        id := entity.ID(id)
-        circular, ok := &future.paths[id]
-        if !ok {
-            panic("entity missing from future.paths")
-        }
-        circular.points[circular.start] = ent.pos
     }
 }
 
