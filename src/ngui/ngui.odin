@@ -63,7 +63,9 @@ slider :: proc(rect: rl.Rectangle, val: ^f32, $low, $high: f32, text: cstring) {
 
     rl.DrawRectangleRec({rect.x, rect.y, rect.width, rect.height}, dark_color(hovered))
     rl.DrawRectangleRec(slider_rect, button_color(hovered))
-    rl.DrawText(text, i32(rect.x + rect.width + SLIDER_WIDTH / 2), i32(rect.y), FONT, TEXT_COLOR)
+    x := rect.x + rect.width + SLIDER_WIDTH / 2
+    y := rect.y + rect.height / 2 - f32(FONT) / 2
+    rl.DrawText(text, i32(x), i32(y), FONT, TEXT_COLOR)
 }
 
 button :: proc(rect: rl.Rectangle, label: cstring) -> bool {

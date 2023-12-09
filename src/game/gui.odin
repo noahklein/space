@@ -65,20 +65,19 @@ update_gui :: proc(w: ^World) {
 
 draw_gui :: proc(w: ^World) {
     X :: 5
-    Y :: 15
-    W :: 100
+    Y :: 20
+    W :: 120
     H :: Y - 1
     TITLE :: 18
     // Top-left panel
-    // rl.GuiPanel({0, 0, 2 * W, 6 * Y}, fmt.ctprintf("%d FPS", rl.GetFPS()))
     ngui.panel({0, 0, 2 * W, 8 * Y}, fmt.ctprintf("%d FPS; %d Bodies", rl.GetFPS(), len(w.entities.data)))
     ngui.slider({X, 1 * Y + TITLE, W, H}, &w.timescale, 0, 100, fmt.ctprintf("%.1fx speed", w.timescale))
-    if ngui.button({X, 2 * Y + TITLE, W, H }, "test") {
+    if ngui.button({X, 2 * Y + TITLE, W, H }, "Pause") {
         fmt.println("clicked")
     }
 
-    ngui.button({X, 3 * Y + TITLE, 100, H }, "another")
-    ngui.button({X, 4 * Y + TITLE, 100, H }, "two words")
+    ngui.button({X, 3 * Y + TITLE, W, H }, "another")
+    ngui.button({X, 4 * Y + TITLE, W, H }, "two words")
 }
 
 draw_gui2d :: proc(w: World) {
