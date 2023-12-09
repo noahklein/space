@@ -108,7 +108,7 @@ future_update :: proc(entities: entity.Storage) {
         if !ok {
             panic("entity missing from future.paths")
         }
-        circular_add(circular, ent.pos)
+        circular_push(circular, ent.pos)
     }
 }
 
@@ -118,7 +118,7 @@ Circular :: struct {
     points: [FUTURE_TIMESTEPS]rl.Vector2,
 }
 
-circular_add :: proc(c: ^Circular, point: rl.Vector2) {
+circular_push :: proc(c: ^Circular, point: rl.Vector2) {
     c.points[c.start] = point
     c.start = (c.start + 1) % len(c.points)
 }
