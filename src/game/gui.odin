@@ -5,6 +5,7 @@ import "core:math/linalg"
 import rl "vendor:raylib"
 
 import "../entity"
+import "../ngui"
 
 gui : GuiState
 
@@ -29,9 +30,11 @@ update_gui :: proc(w: ^World) {
         gui.ent = {}
     }
 
+    should_spawn := rl.IsKeyPressed(.Q)
+
     switch gui.mode {
     case .None:
-        if rl.IsMouseButtonPressed(.LEFT) {
+        if should_spawn {
             gui.mode = .SpawnMass
             gui.ent.pos = mouse_to_world(w.camera)
             gui.ent.texture = entity.Circle{ rl.GREEN }
@@ -39,14 +42,14 @@ update_gui :: proc(w: ^World) {
     case .SpawnMass:
         gui.ent.scale = linalg.distance(mouse_to_world(w.camera), gui.ent.pos)
         gui.ent.rigidbody.mass = gui.ent.scale * SCALE_TO_M
-        if rl.IsMouseButtonPressed(.LEFT) {
+        if should_spawn {
             gui.mode = .SpawnVel
         }
 
     case .SpawnVel:
         target := mouse_to_world(w.camera)
         gui.ent.rigidbody.velocity = 0.1 * (target - gui.ent.pos)
-        if rl.IsMouseButtonPressed(.LEFT) {
+        if should_spawn {
             id := entity.create(&w.entities, gui.ent)
             entity.create(&future.world.entities, gui.ent)
             physics_deinit(&w.physics)
@@ -56,6 +59,8 @@ update_gui :: proc(w: ^World) {
             gui.ent = {}
         }
     }
+
+    ngui.update()
 }
 
 draw_gui :: proc(w: ^World) {
@@ -65,7 +70,7 @@ draw_gui :: proc(w: ^World) {
     Y :: 10
     TITLE :: 18
     rl.GuiPanel({0, 0, 200, 10 * Y}, fmt.ctprintf("%d FPS", rl.GetFPS()))
-    text_black({X, 1 * Y + TITLE}, FONT, "Timestep: %v", w.timescale)
+    ngui.slider({X, 1 * Y + TITLE, 100, Y}, &w.timescale, 0, 100, fmt.ctprintf("Timescale: %v", w.timescale))
     }
 }
 
