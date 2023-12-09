@@ -50,7 +50,7 @@ update_gui :: proc(w: ^World) {
             id := entity.create(&w.entities, gui.ent)
             entity.create(&future.world.entities, gui.ent)
             physics_deinit(&w.physics)
-            physics_init(w)
+            physics_init(w.entities)
 
             gui.mode = .None
             gui.ent = {}
@@ -65,7 +65,7 @@ draw_gui :: proc(w: ^World) {
     Y :: 10
     TITLE :: 18
     rl.GuiPanel({0, 0, 200, 10 * Y}, fmt.ctprintf("%d FPS", rl.GetFPS()))
-    draw_text({X, 1 * Y + TITLE}, FONT, "Timestep: %v", w.timescale)
+    text_black({X, 1 * Y + TITLE}, FONT, "Timestep: %v", w.timescale)
     }
 }
 
@@ -77,21 +77,22 @@ draw_gui2d :: proc(w: World) {
     switch gui.mode {
     case .None:
     case .SpawnMass:
-        draw_text(gui.ent.pos, 3 * FONT, "M=%v", gui.ent.rigidbody.mass)
+        text_white(gui.ent.pos, 3 * FONT, "M=%v", gui.ent.rigidbody.mass)
     case .SpawnVel:
         target := mouse_to_world(w.camera)
         rl.DrawLineV(gui.ent.pos, target, rl.WHITE)
-        draw_text(gui.ent.pos, 3 * FONT, "V0=%v", gui.ent.rigidbody.velocity)
+        text_white(gui.ent.pos, 3 * FONT, "V0=%v", gui.ent.rigidbody.velocity)
     }
-
-    iter : entity.IterState
-    for ent in entity.iter(w.entities, &iter) {
-    }
-
 }
 
-draw_text :: proc(pos: rl.Vector2, font_size: i32, format: string, args: ..any) {
+text_white :: proc(pos: rl.Vector2, font_size: i32, format: string, args: ..any) {
     x, y := i32(pos.x), i32(pos.y)
     str := fmt.ctprintf(format, ..args)
     rl.DrawText(str, x, y, font_size, rl.WHITE)
+}
+
+text_black :: proc(pos: rl.Vector2, font_size: i32, format: string, args: ..any) {
+    x, y := i32(pos.x), i32(pos.y)
+    str := fmt.ctprintf(format, ..args)
+    rl.DrawText(str, x, y, font_size, rl.BLACK)
 }

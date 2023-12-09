@@ -146,9 +146,9 @@ draw :: proc(w: World) {
             rl.DrawCircleV(ent.pos, ent.scale, tex.color)
             when ODIN_DEBUG {
                 start := ent.pos + ent.scale
-                draw_text(start + {0,  0}, 10, "P=%.1f", ent.pos)
-                draw_text(start + {0, 10}, 10, "V=%.1f", ent.rigidbody.velocity)
-                draw_text(start + {0, 20}, 10, "M=%.0f", ent.rigidbody.mass)
+                text_white(start + {0,  0}, 10, "P=%.1f", ent.pos)
+                text_white(start + {0, 10}, 10, "V=%.1f", ent.rigidbody.velocity)
+                text_white(start + {0, 20}, 10, "M=%.0f", ent.rigidbody.mass)
             }
         case rl.Texture2D:
             panic("Textures not yet supported")
@@ -165,13 +165,12 @@ draw :: proc(w: World) {
         }
     }
 
-    for ent_id, points in future.points {
-        circ_iter : CircularIter
+    for ent_id, path in future.paths {
         prev : rl.Vector2
         init : bool
-        for p in circular_iter(points, &circ_iter){
-        // for p, i in points {
-            if !init {
+        for p, i in path.points {
+            // Don't draw line from end to start.
+            if !init || i == path.start {
                 init = true
                 prev = p
                 continue
