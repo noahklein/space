@@ -146,9 +146,9 @@ draw :: proc(w: World) {
             rl.DrawCircleV(ent.pos, ent.scale, tex.color)
             when ODIN_DEBUG {
                 start := ent.pos + ent.scale
-                draw_text(i32(start.x), i32(start.y +  0), 10, "P=%.1f", ent.pos)
-                draw_text(i32(start.x), i32(start.y + 10), 10, "V=%.1f", ent.rigidbody.velocity)
-                draw_text(i32(start.x), i32(start.y + 20), 10, "M=%.0f", ent.rigidbody.mass)
+                draw_text(start + {0,  0}, 10, "P=%.1f", ent.pos)
+                draw_text(start + {0, 10}, 10, "V=%.1f", ent.rigidbody.velocity)
+                draw_text(start + {0, 20}, 10, "M=%.0f", ent.rigidbody.mass)
             }
         case rl.Texture2D:
             panic("Textures not yet supported")
@@ -182,6 +182,10 @@ draw :: proc(w: World) {
 
             prev = p
         }
+    }
+
+    when ODIN_DEBUG {
+        draw_gui2d(w)
     }
 }
 

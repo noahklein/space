@@ -11,8 +11,9 @@ Physics :: struct {
     dt_acc: f32,
 }
 
-FUTURE_TIMESTEPS :: 1000
-FUTURE_STEPSIZE  :: 1.0 // In seconds
+FUTURE_TIMESTEPS  :: 2000
+FUTURE_LINE_COUNT :: 500 // Number of lines to draw in future path.
+FUTURE_STEPSIZE   :: 1.0 / 60.0 // In seconds
 
 // Copy the world and predict the future.
 Future :: struct {
@@ -35,7 +36,7 @@ physics_init :: proc(w: ^World) {
     }
 
     for timestep in 0..<FUTURE_TIMESTEPS {
-        physics_subupdate(&future.world, 1)
+        physics_subupdate(&future.world, FUTURE_STEPSIZE)
         future_update(w.entities)
 
         iter = 0

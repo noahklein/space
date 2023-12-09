@@ -1,0 +1,97 @@
+package game
+
+import "core:fmt"
+import "core:math/linalg"
+import rl "vendor:raylib"
+
+import "../entity"
+
+gui : GuiState
+
+FONT :: 10
+SCALE_TO_M :: 100
+
+GuiState :: struct {
+    mode: GuiMode,
+    prev_mouse: rl.Vector2,
+    ent: entity.Entity, // Preview in gui before creating.
+}
+
+GuiMode :: enum {
+    None,
+    SpawnMass,
+    SpawnVel,
+}
+
+update_gui :: proc(w: ^World) {
+    if rl.IsMouseButtonPressed(.RIGHT) {
+        gui.mode = .None
+        gui.ent = {}
+    }
+
+    switch gui.mode {
+    case .None:
+        if rl.IsMouseButtonPressed(.LEFT) {
+            gui.mode = .SpawnMass
+            gui.ent.pos = mouse_to_world(w.camera)
+            gui.ent.texture = entity.Circle{ rl.GREEN }
+        }
+    case .SpawnMass:
+        gui.ent.scale = linalg.distance(mouse_to_world(w.camera), gui.ent.pos)
+        gui.ent.rigidbody.mass = gui.ent.scale * SCALE_TO_M
+        if rl.IsMouseButtonPressed(.LEFT) {
+            gui.mode = .SpawnVel
+        }
+
+    case .SpawnVel:
+        target := mouse_to_world(w.camera)
+        gui.ent.rigidbody.velocity = 0.1 * (target - gui.ent.pos)
+        if rl.IsMouseButtonPressed(.LEFT) {
+            id := entity.create(&w.entities, gui.ent)
+            entity.create(&future.world.entities, gui.ent)
+            physics_deinit(&w.physics)
+            physics_init(w)
+
+            gui.mode = .None
+            gui.ent = {}
+        }
+    }
+}
+
+draw_gui :: proc(w: ^World) {
+    {
+    // Top-left panel
+    X :: 10
+    Y :: 10
+    TITLE :: 18
+    rl.GuiPanel({0, 0, 200, 10 * Y}, fmt.ctprintf("%d FPS", rl.GetFPS()))
+    draw_text({X, 1 * Y + TITLE}, FONT, "Timestep: %v", w.timescale)
+    }
+}
+
+draw_gui2d :: proc(w: World) {
+    if circle, ok := gui.ent.texture.(entity.Circle); ok {
+        rl.DrawCircleV(gui.ent.pos, gui.ent.scale, circle.color)
+    }
+
+    switch gui.mode {
+    case .None:
+    case .SpawnMass:
+        draw_text(gui.ent.pos, 3 * FONT, "M=%v", gui.ent.rigidbody.mass)
+    case .SpawnVel:
+        target := mouse_to_world(w.camera)
+        rl.DrawLineV(gui.ent.pos, target, rl.WHITE)
+        draw_text(gui.ent.pos, 3 * FONT, "V0=%v", gui.ent.rigidbody.velocity)
+    }
+
+    iter : entity.IterState
+    for ent in entity.iter(w.entities, &iter) {
+    }
+
+}
+
+draw_text :: proc(pos: rl.Vector2, font_size: i32, format: string, args: ..any) {
+    x, y := i32(pos.x), i32(pos.y)
+    str := fmt.ctprintf(format, ..args)
+    rl.DrawText(str, x, y, font_size, rl.WHITE)
+}
