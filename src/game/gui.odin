@@ -72,12 +72,15 @@ draw_gui :: proc(w: ^World) {
     // Top-left panel
     ngui.panel({0, 0, 2 * W, 8 * Y}, fmt.ctprintf("%d FPS; %d Bodies", rl.GetFPS(), len(w.entities.data)))
     ngui.slider({X, 1 * Y + TITLE, W, H}, &w.timescale, 0, 100, fmt.ctprintf("%.1fx speed", w.timescale))
-    if ngui.button({X, 2 * Y + TITLE, W, H }, "Pause") {
-        fmt.println("clicked")
+    if ngui.button({X, 2 * Y + TITLE, W, H }, "Play" if w.timescale == 0 else "Pause") {
+        w.timescale = 1 if w.timescale == 0 else 0
     }
-
-    ngui.button({X, 3 * Y + TITLE, W, H }, "another")
-    ngui.button({X, 4 * Y + TITLE, W, H }, "two words")
+    if ngui.button({X, 3 * Y + TITLE, W / 2, H }, "Prev") {
+        w.cam_follow = (w.cam_follow - 1) if w.cam_follow > 0 else entity.ID(len(w.entities.data) - 1)
+    }
+    if ngui.button({X + W / 2, 3 * Y + TITLE, W / 2, H }, "Next") {
+        w.cam_follow = (w.cam_follow + 1) % entity.ID(len(w.entities.data))
+    }
 }
 
 draw_gui2d :: proc(w: World) {

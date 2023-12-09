@@ -18,16 +18,9 @@ SLIDER_WIDTH :: 16
 state : NGui
 
 NGui :: struct {
-    want_mouse, want_keyboard: bool
 }
 
 update :: proc() {
-    state.want_mouse = false
-    state.want_keyboard = false
-}
-
-on_click :: proc() {
-    state.want_mouse = true
 }
 
 panel :: proc(rect: rl.Rectangle, title: cstring) {
@@ -56,7 +49,6 @@ slider :: proc(rect: rl.Rectangle, val: ^f32, $low, $high: f32, text: cstring) {
 
     hovered := rl.CheckCollisionPointRec(mouse, rect)
     if hovered && rl.IsMouseButtonDown(.LEFT) {
-        on_click()
         mouse_pct := (mouse.x - rect.x) / rect.width
         val^ = mouse_pct * (high - low)
     }
@@ -72,11 +64,11 @@ button :: proc(rect: rl.Rectangle, label: cstring) -> bool {
     hovered := rl.CheckCollisionPointRec(rl.GetMousePosition(), rect)
 
     rl.DrawRectangleRec(rect, button_color(hovered))
-    // text_width := f32(len(label)) / 2
-    x := rect.x + (rect.width / 2) - f32(len(label)) * 2
-    y := rect.y + (rect.height / 2) - (f32(FONT) / 2)
-
-    rl.DrawText(label, i32(x), i32(y), FONT, TEXT_COLOR)
+    if label != nil {
+        x := rect.x + (rect.width / 2) - f32(len(label)) * 2
+        y := rect.y + (rect.height / 2) - (f32(FONT) / 2)
+        rl.DrawText(label, i32(x), i32(y), FONT, TEXT_COLOR)
+    }
 
     return hovered && rl.IsMouseButtonReleased(.LEFT)
 }

@@ -45,7 +45,7 @@ get_input :: proc(w: World) -> (input: bit_set[Input]) {
          if rl.IsKeyPressed(.PERIOD) do input += {.Faster}
     else if rl.IsKeyPressed(.COMMA)  do input += {.Slower}
 
-    if rl.IsMouseButtonPressed(.LEFT) && !ngui.state.want_mouse do input += {.Select}
+    if rl.IsMouseButtonPressed(.LEFT) do input += {.Select}
 
     if rl.IsKeyPressed(.F) do input += {.PredictFuture}
 
