@@ -111,8 +111,8 @@ update :: proc(w: ^World, input: bit_set[Input], dt: f32) {
 
     cursor := rl.GetScreenToWorld2D(rl.GetMousePosition(), w.camera)
     // Click on entity to follow it.
-    iter_state : entity.IterState
-    if .Select in input do for ent, id in entity.iter(w.entities, &iter_state) {
+    if .Select in input do for ent, id in w.entities.data {
+        id := entity.ID(id)
         switch tex in ent.texture {
         case rl.Texture2D:
         case entity.Circle:
@@ -130,6 +130,8 @@ update :: proc(w: ^World, input: bit_set[Input], dt: f32) {
     }
 }
 
+SHADOW_OFFSET :: 20
+
 draw :: proc(w: World) {
     rl.BeginDrawing()
     defer rl.EndDrawing()
@@ -139,10 +141,19 @@ draw :: proc(w: World) {
     rl.BeginMode2D(w.camera)
     defer rl.EndMode2D()
 
-    iter_state : entity.ID
-    for ent in entity.iter(w.entities, &iter_state) {
+    for ent in future.world.entities.data {
         switch tex in ent.texture {
         case entity.Circle:
+            rl.DrawCircleV(ent.pos, ent.scale, tex.color - {0, 0, 0, 150})
+        case rl.Texture2D:
+            panic("Textures not yet supported - future prediction")
+        }
+    }
+
+    for ent in w.entities.data {
+        switch tex in ent.texture {
+        case entity.Circle:
+            rl.DrawCircleV(ent.pos + SHADOW_OFFSET, ent.scale, rl.BLACK)
             rl.DrawCircleV(ent.pos, ent.scale, tex.color)
             when ODIN_DEBUG {
                 start := ent.pos + ent.scale
@@ -152,16 +163,6 @@ draw :: proc(w: World) {
             }
         case rl.Texture2D:
             panic("Textures not yet supported")
-        }
-    }
-
-    iter_state = 0
-    for ent in entity.iter(future.world.entities, &iter_state) {
-        switch tex in ent.texture {
-        case entity.Circle:
-            rl.DrawCircleV(ent.pos, ent.scale, tex.color - {0, 0, 0, 150})
-        case rl.Texture2D:
-            panic("Textures not yet supported - future prediction")
         }
     }
 

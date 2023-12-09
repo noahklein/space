@@ -11,7 +11,7 @@ Physics :: struct {
     dt_acc: f32,
 }
 
-FUTURE_TIMESTEPS  :: 50000
+FUTURE_TIMESTEPS  :: 5000
 FUTURE_STEPSIZE   :: 1.0 / 60.0 // In seconds
 
 // Copy the world and predict the future.
@@ -27,10 +27,9 @@ physics_init :: proc(ents: entity.Storage) {
     future.world.entities = entity.storage_init(128)
     future.paths = make(map[entity.ID]Circular)
 
-    iter: entity.IterState
-    for ent in entity.iter(ents, &iter) {
-        // Copy bodies to future world.
-        id := entity.create(&future.world.entities, ent^)
+    // Copy entities to future world.
+    for ent in ents.data {
+        id := entity.create(&future.world.entities, ent)
         future.paths[id] = {}
     }
 
@@ -38,8 +37,8 @@ physics_init :: proc(ents: entity.Storage) {
         physics_subupdate(&future.world, FUTURE_STEPSIZE)
         future_update(ents)
 
-        iter = 0
-        for ent, id in entity.iter(future.world.entities, &iter) {
+        for ent, id in future.world.entities.data {
+            id := entity.ID(id)
             circular, ok := &future.paths[id]
             if !ok {
                 panic("entity missing from future.paths")
@@ -71,13 +70,11 @@ physics_update :: proc(w: ^World, dt: f32) {
 }
 
 physics_subupdate :: proc(w: ^World, dt: f32) {
-    iter_a: entity.IterState
-    for ent, id_a in entity.iter(w.entities, &iter_a) {
+    for &ent, id_a in w.entities.data {
         rb := &ent.rigidbody
 
         // Apply gravity from each body. F = GMm / r²
-        iter_b : entity.IterState
-        for ent_b, id_b in entity.iter(w.entities, &iter_b) do if id_a != id_b {
+        for ent_b, id_b in w.entities.data do if id_a != id_b {
             rb_b := ent_b.rigidbody
             ab := ent_b.pos - ent.pos
             dist_squared := ab.x * ab.x + ab.y * ab.y
@@ -88,15 +85,14 @@ physics_subupdate :: proc(w: ^World, dt: f32) {
         }
     }
 
-    iter_a = 0 // Reuse iterator
-    for ent in entity.iter(w.entities, &iter_a) {
+    for &ent in w.entities.data {
         ent.pos += ent.rigidbody.velocity * dt
     }
 }
 
 future_update :: proc(entities: entity.Storage) {
-    iter : entity.IterState
-    for ent, id in entity.iter(future.world.entities, &iter) {
+    for ent, id in future.world.entities.data {
+        id := entity.ID(id)
         circular, ok := &future.paths[id]
         if !ok {
             panic("entity missing from future.paths")
@@ -105,8 +101,8 @@ future_update :: proc(entities: entity.Storage) {
         circular.points[circular.start] = ent.pos
     }
 
-    iter = 0
-    for ent, id in entity.iter(entities, &iter) {
+    for ent, id in entities.data {
+        id := entity.ID(id)
         circular, ok := &future.paths[id]
         if !ok {
             panic("entity missing from future.paths")
